@@ -88,6 +88,7 @@ protected:
 	string randomPwd(int pwdLength);
 	char * charSymbArray_;
 	int    lengthSymbArray_;
+	string makePwd(int pwdLength);
 };
 
 /**
@@ -105,7 +106,14 @@ class BlackBoxSafe : public BlackBoxUnsafe{
 	/// \todo  Implementation of class BlackBoxSafe needs to be finalized.
 public:
 	BlackBoxSafe(int pwdLength, int symbSetSize) : BlackBoxUnsafe(pwdLength, symbSetSize){;};
-	virtual string input(string strPwd){return string("undefined");};
+	virtual string input(string strPwd);
+	string makePwd(int pwdLength);
+	string pwd_out();
+
+private:
+	string pwd;
+	string pwd_sha;
+
 };
 
 
