@@ -57,8 +57,7 @@ string pwdServer::myResponse(string input){
 		return string("Password created");
 	}else if(blackbox != NULL){
 
-
-			return blackbox->input(input);;
+			return blackbox->input(input);
 	}else {
 		return string("Couldn't read parameter");
 	}

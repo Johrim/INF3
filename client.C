@@ -66,7 +66,6 @@ void pwdClient::run(){
 	msg = receive(32);
 	cout << "got response: " << msg << endl;
 
-
 	guessPwd g;
 
 	while(run){
@@ -81,6 +80,12 @@ void pwdClient::run(){
 			}
 			tries++;
 		}
+		cin >> msg;
+		if(msg.compare(0,5,"close") == 0){
+			msg = "BYEBYE";
+			sendData(msg);
+			break;
+				}
 	}
 
 }
@@ -158,6 +163,7 @@ string guessPwd::random(int pwdLength){
 			symbolIdx = rand() % lengthSymbArray_;
 			pwd += charSymbArray_[symbolIdx];
 		}
+		pwd += "\0";
 	return pwd;
 }
 
