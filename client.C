@@ -11,6 +11,7 @@
 #include <iostream>
 #include <unistd.h> //contains various constants
 
+#include <fstream>
 #include "SIMPLESOCKET.H"
 #include "TASK1.H"
 
@@ -26,9 +27,12 @@ public:
 
 private:
 	pwdClient *client = this;
-	int pwdLength;
-	int symbSetSize;
-	int tries = 1;
+	char pwdLength[99];
+	char symbSetSize[99];
+	int tries = 0;
+	int repetition;
+	fstream result;
+
 };
 
 class guessPwd{
@@ -40,6 +44,7 @@ public:
 private:
 	char * charSymbArray_;
 	int    lengthSymbArray_;
+
 };
 
 int main() {
@@ -55,37 +60,64 @@ int main() {
 
 
 void pwdClient::run(){
-	bool goOn=1;
 	bool run=1;
-	int i = 1;
 	string msg;
 	string host = "localhost";
 	string response ="ACCESS ACCEPTED";
+
 	conn(host , 2022);
 	makeBlackbox();
+
 	msg = receive(32);
 	cout << "got response: " << msg << endl;
 
 	guessPwd g;
 
 	while(run){
-		g.charSymbArray(symbSetSize);
-		while(goOn){
-			sendData(g.random(pwdLength));
+		g.charSymbArray(atoi(symbSetSize));
+		while(repetition > 0){
+			if(tries == 0){
+				tries = 1;
+			}
+
+			sendData(g.random(atoi(pwdLength)));
 			msg =receive(32);
 			cout << "got response: " << msg << endl;
 			if(msg.compare(response) == 0){
-				goOn = 0;
-				std::cout <<tries << " tries needed! " << std::endl;
+				std::cout <<tries << " tries needed! " << endl;
+				result.open("result.dat", ios::app);
+				result << tries << " Versuche" << endl;
+				result.close();
+
+				repetition --;
+				tries = 0;
+
+				if(repetition > 1 ){
+
+					msg = "newpwd[]";
+					msg.insert(7,pwdLength);
+					sendData(msg);
+				}
+				/*if(repetition = 1){
+					result.open("result.dat", ios::app);
+					result << "\n";
+					result.close();
+				}*/
+
 			}
 			tries++;
 		}
+		tries = 0;
 		cin >> msg;
 		if(msg.compare(0,5,"close") == 0){
 			msg = "BYEBYE";
 			sendData(msg);
 			break;
 				}
+		if(msg.compare(0,6,"newbox") == 0){
+			makeBlackbox();
+		}
+
 	}
 
 }
@@ -94,57 +126,65 @@ void pwdClient::run(){
 void pwdClient::makeBlackbox(){
 	string msg("makepwd[,]");
 	char numbers[] = ("1234567890");
-	char a[99];
-	char b[99];
-	int i,j;
+	int i,n;
 
 
 
 	std::cout << "Passwordlength: ";
-	std::cin >> a;
-	i = strspn (a,numbers);
+	std::cin >> pwdLength;
+	i = strspn(pwdLength,numbers);
 
 	while(i == 0){
 		std::cout << "False Input!" << std::endl;
 		std::cout << "Passwordlength: ";
-		std::cin >> a;
-		i = strspn (a,numbers);
+		std::cin >> pwdLength;
+		i = strspn(pwdLength,numbers);
 	}
 
 
-	j = atoi(a);
+	i = atoi(pwdLength);
 
-	while(j < TASK1::MINIMAL_PWD_LENGTH){
+	while(i < TASK1::MINIMAL_PWD_LENGTH){
 		std::cout <<"Minimum Passwordlength = 4" << std::endl;
 		std::cout << "Passwordlength: ";
-		std::cin >> a;
-		j = atoi(a);
+		std::cin >> pwdLength;
+		i = atoi(pwdLength);
 	}
-	pwdLength = j;
+	//pwdLength = i;
+	msg.insert(8,pwdLength);
 
 	std::cout << "Number of possible symbols: ";
-	std::cin >> b;
-	i = strspn (b,numbers);
+	std::cin >> symbSetSize;
+	i = strspn(symbSetSize,numbers);
 	while(i == 0){
 			std::cout << "False Input!" << std::endl;
 			std::cout << "Number of possible symbols: ";
-			std::cin >> b;
-			i = strspn (b,numbers);
+			std::cin >> symbSetSize;
+			i = strspn(symbSetSize,numbers);
 		}
 
-	j = atoi(b);
+	i = atoi(symbSetSize);
 
-	while(j > TASK1::SYMBOLS.length()){
+	while(i > TASK1::SYMBOLS.length() || i < 4){
+		if(i > TASK1::SYMBOLS.length()){
+			std::cout << "Maximum Number of possible symbols = " << TASK1::SYMBOLS.length() << std::endl;
+		}
+		if(i < 4){
 			std::cout <<"Minimum Number of possible symbols = 4" << std::endl;
-			std::cout << "Number of possible symbols: ";
-			std::cin >> b;
-			j = atoi(b);
+		}
+
+		std::cout << "Number of possible symbols: ";
+		std::cin >> symbSetSize;
+		i = atoi(symbSetSize);
 
 		}
-	symbSetSize = j;
-	msg.insert(8,a);
-	msg.insert(10,b);
 
+	msg.insert(10,symbSetSize);
+	cout << "Number of repetition: ";
+	cin >> repetition;
+	result.open("result.dat", ios::app);
+	result << "Passwordlaenge: "<< pwdLength << ", Anzahl von unterschiedlichen Symbole: "<< symbSetSize << ", Anzahl der Wiederholungen: "<< repetition << endl;
+	result.close();
 	sendData(msg);
 }
 
@@ -163,7 +203,6 @@ string guessPwd::random(int pwdLength){
 			symbolIdx = rand() % lengthSymbArray_;
 			pwd += charSymbArray_[symbolIdx];
 		}
-		pwd += "\0";
 	return pwd;
 }
 

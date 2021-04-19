@@ -58,7 +58,7 @@ string pwdServer::myResponse(string input){
 	}else if(blackbox != NULL){
 
 			return blackbox->input(input);
-	}else {
-		return string("Couldn't read parameter");
+	}else if(sscanf(input.c_str(), "newpwd[%i]", &a)){
+		blackbox->makePwd(a);
 	}
 }
